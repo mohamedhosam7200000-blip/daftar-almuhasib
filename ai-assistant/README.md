@@ -27,7 +27,24 @@
 | `concrete_quantity` | حصر كمّيات الخرسانة وتكلفتها مع نسبة الهالك |
 | `save_file` | حفظ صفحات الويب والتقارير والشيفرة في مجلّد `output/` |
 
-## التشغيل
+## نسخة الويب (Netlify)
+
+في مجلد [`web/`](web/) نسخة تعمل في المتصفّح بالأدوات نفسها، بواجهة محادثة عربية
+ومعاينة وتنزيل للملفّات التي يصمّمها. كلّ مستخدم يُدخل مفتاح API الخاصّ به في
+الإعدادات، فيُحفظ في متصفّحه ولا يمرّ بأيّ خادمٍ غير خوادم Anthropic.
+
+```bash
+cd ai-assistant/web
+npm install
+npm run build     # ينتج مجلّد dist/ — موقعٌ جاهز
+npm test
+```
+
+**الرفع**: اسحب مجلّد `dist/` وأفلته في <https://app.netlify.com/drop>.
+أو اربط Netlify بالمستودع واجعل Base directory = `ai-assistant/web`
+(الإعدادات في `netlify.toml`).
+
+## التشغيل من الطرفية
 
 ```bash
 cd ai-assistant

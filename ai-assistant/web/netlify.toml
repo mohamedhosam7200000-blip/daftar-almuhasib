@@ -1,0 +1,12 @@
+# For Git-connected deploys (base directory: ai-assistant/web).
+# For drag-and-drop, upload the built dist/ folder instead.
+[build]
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "no-referrer"
+    X-Content-Type-Options = "nosniff"
