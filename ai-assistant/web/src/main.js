@@ -1,8 +1,17 @@
-import Anthropic from "@anthropic-ai/sdk";
+// Chat UI shared by both builds. The backend (Claude API or the local
+// Ollama server) is injected by entry-claude.js / entry-local.js.
 import DOMPurify from "dompurify";
 import { marked } from "marked";
 
-import { Khabeer, TurnFailed } from "./agent.js";
+/**
+ * backend: {
+ *   needsKey: boolean,
+ *   create({ key, effort }) -> bot with ask()/reset()/messages,
+ *   describeError(e) -> string | null,
+ *   isAuthError(e) -> boolean,
+ * }
+ */
+export function start(backend) {
 
 const $ = (sel) => document.querySelector(sel);
 const log = $("#log");
@@ -35,7 +44,7 @@ let bot = null;
 
 function makeBot() {
   const key = store.get("khabeer.key");
-  bot = key ? new Khabeer(key, { effort: store.get("khabeer.effort") || "high" }) : null;
+  bot = !backend.needsKey || key ? backend.create({ key, effort: store.get("khabeer.effort") || "high" }) : null;
 }
 
 function openSettings() {
@@ -177,7 +186,7 @@ async function send(text) {
     err.className = "error";
     err.textContent = describeError(e);
     reply.append(err);
-    if (e instanceof Anthropic.AuthenticationError) openSettings();
+    if (backend.isAuthError(e)) openSettings();
   } finally {
     thinking.remove();
     controller = null;
@@ -187,14 +196,8 @@ async function send(text) {
 }
 
 function describeError(e) {
-  if (e instanceof TurnFailed) return e.message;
-  if (e instanceof Anthropic.APIUserAbortError || e?.name === "AbortError") return "أُوقف الردّ.";
-  if (e instanceof Anthropic.AuthenticationError) return "مفتاح API غير صالح. أدخل مفتاحاً صحيحاً من الإعدادات.";
-  if (e instanceof Anthropic.PermissionDeniedError) return "المفتاح لا يملك صلاحية استخدام هذا النموذج.";
-  if (e instanceof Anthropic.RateLimitError) return "تجاوزت حدّ الطلبات؛ انتظر قليلاً ثم أعد المحاولة.";
-  if (e instanceof Anthropic.APIConnectionError) return "تعذّر الاتصال بالخادم؛ تحقّق من الإنترنت.";
-  if (e instanceof Anthropic.APIError) return `خطأ من الخادم (${e.status ?? "?"}): ${e.message}`;
-  return `خطأ غير متوقّع: ${e?.message ?? e}`;
+  if (e?.name === "AbortError") return "أُوقف الردّ.";
+  return backend.describeError(e) ?? `خطأ غير متوقّع: ${e?.message ?? e}`;
 }
 
 function autosize() {
@@ -217,6 +220,10 @@ document.querySelectorAll("[data-example]").forEach((b) =>
   b.addEventListener("click", () => send(b.querySelector("span").textContent)),
 );
 
+if (!backend.needsKey) {
+  $("#open-settings").hidden = true;
+}
 makeBot();
 if (!bot) openSettings();
 input.focus();
+}
