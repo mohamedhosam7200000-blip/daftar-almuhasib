@@ -53,6 +53,7 @@ function openSettings() {
   settings.showModal();
 }
 
+if (backend.needsKey) {
 $("#settings-form").addEventListener("submit", (e) => {
   if (e.submitter?.value !== "save") return;
   const key = $("#key").value.trim();
@@ -64,6 +65,7 @@ $("#settings-form").addEventListener("submit", (e) => {
 });
 $("#open-settings").addEventListener("click", openSettings);
 $("#forget-key").addEventListener("click", () => { $("#key").value = ""; });
+}
 
 // --- Rendering ---------------------------------------------------------------
 
@@ -220,9 +222,6 @@ document.querySelectorAll("[data-example]").forEach((b) =>
   b.addEventListener("click", () => send(b.querySelector("span").textContent)),
 );
 
-if (!backend.needsKey) {
-  $("#open-settings").hidden = true;
-}
 makeBot();
 if (!bot) openSettings();
 input.focus();

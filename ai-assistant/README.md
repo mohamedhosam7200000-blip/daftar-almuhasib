@@ -27,6 +27,27 @@
 | `concrete_quantity` | حصر كمّيات الخرسانة وتكلفتها مع نسبة الهالك |
 | `save_file` | حفظ صفحات الويب والتقارير والشيفرة في مجلّد `output/` |
 
+## النسخة المستقلّة (دون إنترنت ودون رصيد)
+
+تعمل على جهاز المستخدم بنموذج مفتوح المصدر (Qwen3 عبر [Ollama](https://ollama.com))،
+ولا تحتوي أيّ شيفرة من Anthropic ولا تحتاج مفتاحاً. الواجهة نفسها، والأدوات نفسها.
+
+| الملفّ | الدور |
+|---|---|
+| [`khabeer/local/agent.py`](khabeer/local/agent.py) | المحرّك: يحاور النموذج المحلي وينفّذ الأدوات (مكتبة بايثون القياسية فقط) |
+| [`khabeer/local/server.py`](khabeer/local/server.py) | خادم على `127.0.0.1:8321` يعرض الواجهة ويستقبل الرسائل |
+| [`offline/Khabeer.bat`](offline/Khabeer.bat) + [`launch.ps1`](offline/launch.ps1) | تشغيل بضغطة على ويندوز: يتحقّق من المتطلّبات ويختار النموذج حسب الذاكرة وينزّله |
+| [`offline/package.py`](offline/package.py) | يبني ملفّ التوزيع `offline/build/khabeer-offline.zip` |
+
+```bash
+cd ai-assistant/web && npm install && npm run build   # يبني dist-local/
+cd .. && python offline/package.py                    # ينتج ملفّ التوزيع
+# أو للتجربة مباشرة (بعد: ollama pull qwen3:8b)
+python -m khabeer.local.server
+```
+
+إرشادات المستخدم النهائي في [`offline/README-AR.txt`](offline/README-AR.txt).
+
 ## نسخة الويب (Netlify)
 
 في مجلد [`web/`](web/) نسخة تعمل في المتصفّح بالأدوات نفسها، بواجهة محادثة عربية
