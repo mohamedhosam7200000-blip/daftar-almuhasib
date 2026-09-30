@@ -139,3 +139,12 @@ def test_server_end_to_end(ollama, monkeypatch, tmp_path):
     status, data = post("/api/chat", {"session": "s1", "text": "سلام"})
     assert status == 503 and "ollama pull" in data["error"]
     httpd.shutdown()
+
+
+def test_thinking_off_for_qwen3_only(ollama):
+    ollama.reply("أ")
+    ollama.reply("ب")
+    LocalKhabeer(model="qwen3:8b", base_url=ollama.url).ask("س")
+    LocalKhabeer(model="llama3.1:8b", base_url=ollama.url).ask("س")
+    assert ollama.requests[0]["think"] is False
+    assert "think" not in ollama.requests[1]

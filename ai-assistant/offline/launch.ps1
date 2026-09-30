@@ -40,7 +40,10 @@ if (-not $python) {
 }
 
 # 3. Model: bigger is smarter but needs more memory.
+# To force a model, put its name in model.txt next to this script (e.g. qwen3:4b).
 $model = $env:KHABEER_LOCAL_MODEL
+$modelFile = Join-Path $PSScriptRoot "model.txt"
+if (-not $model -and (Test-Path $modelFile)) { $model = (Get-Content $modelFile -TotalCount 1).Trim() }
 if (-not $model) {
     $ramGB = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB)
     if ($ramGB -ge 30) { $model = "qwen3:14b" }

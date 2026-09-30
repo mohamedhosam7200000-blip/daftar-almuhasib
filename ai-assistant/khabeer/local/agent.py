@@ -20,6 +20,16 @@ MODEL = os.environ.get("KHABEER_LOCAL_MODEL", "qwen3:8b")
 OUTPUT_DIR = Path(os.environ.get("KHABEER_OUTPUT_DIR", "output")).resolve()
 MAX_TOOL_ROUNDS = 15
 TIMEOUT = 600  # seconds; local models on CPU can be slow
+# Qwen3 "thinks" at length before answering, which is very slow on a CPU.
+# Off by default for Qwen3; KHABEER_THINK=1 turns it on (slower, sometimes smarter).
+_THINK_ENV = os.environ.get("KHABEER_THINK", "").strip()
+
+
+def default_think(model: str) -> bool | None:
+    """None means: don't send the field (models without a thinking mode)."""
+    if _THINK_ENV:
+        return _THINK_ENV == "1"
+    return False if model.startswith("qwen3") else None
 
 # Small models follow short, explicit rules better than long prose.
 LOCAL_RULES = """
@@ -155,6 +165,7 @@ class LocalKhabeer:
     def __init__(self, model: str = MODEL, base_url: str = OLLAMA_URL):
         self.model = model
         self.base_url = base_url
+        self.think = default_think(model)
         self.messages: list[dict] = [{"role": "system", "content": SYSTEM_PROMPT + LOCAL_RULES}]
 
     def reset(self) -> None:
@@ -167,6 +178,7 @@ class LocalKhabeer:
             "tools": TOOLS,
             "stream": False,
             "options": {"temperature": 0.3, "num_ctx": 16384},
+            **({"think": self.think} if self.think is not None else {}),
         }).encode()
         req = urllib.request.Request(f"{self.base_url}/api/chat", data=body,
                                      headers={"Content-Type": "application/json"})
